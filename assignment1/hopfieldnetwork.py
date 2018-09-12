@@ -31,6 +31,8 @@ class HopField(object):
         neuronWeights = self.weights[neuronIndex,:]
         z = neuronWeights @ input
         neuronState = np.sign(z)
+        if neuronState == 0:
+            neuronState = 1
         return neuronState
     
     def feedSync(self,input):
