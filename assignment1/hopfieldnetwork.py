@@ -1,4 +1,10 @@
 import numpy as np
+import random
+
+###############################################
+# Class for the Hopfield Model Neural Network #
+# Using McCulloch Pitts Neurons               #
+###############################################
 
 class HopField(object):
     def __init__(self,patterns,bitts):
@@ -18,4 +24,16 @@ class HopField(object):
             w[i,i] = 0
 
         self.weights = w
+    
+    def feedAsync(self,input,neuronIndex):
+        #(bitts,_) = self.weights.shape
+        #neuronIndex = np.random.randint(low=0,high=bitts)
+        neuronWeights = self.weights[neuronIndex,:]
+        z = neuronWeights @ input
+        neuronState = np.sign(z)
+        return neuronState
+    
+    def feedSync(self,input):
+        return 0
+
 
