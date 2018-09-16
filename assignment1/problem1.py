@@ -22,7 +22,7 @@ p_errors_list = []
 for p in patterns :
     errors = 0
     for i in range(trials):
-        net = HopField(p,bitts)
+        net = HopField(patterns=p,bitts=bitts)
 
         # Set Diagonal to Zeroes
         for i in range(bitts):

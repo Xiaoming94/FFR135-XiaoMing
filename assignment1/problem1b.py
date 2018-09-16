@@ -18,30 +18,13 @@ p_errors_list = []
 for p in patterns :
     errors = 0
     for i in range(trials):
-        net = HopField(p,bitts)
+        net = HopField(patterns=p,bitts=bitts)
           
         # Randomly chooose a pattern and which neuron to observe
         n_i = np.random.randint(bitts)
         p_i = np.random.randint(p)
         inputPattern = net.patterns[p_i]
         
-
-        # Set Diagonal to Zeroes
-        #for i in range(bitts):
-        #    net.weights[i,i] = 0 
-        # Set Diagonal to Zeroes
-        #for i in range(bitts):
-        #    net.weights[i,i] = 0
-        # Set Diagonal to Zeroes
-        #for i in range(bitts):
-        #    net.weights[i,i] = 0
-        # Set Diagonal to Zeroes
-        #for i in range(bitts):
-        #    net.weights[i,i] = 0
-        # Set Diagonal to Zeroes
-        #for i in range(bitts):
-        #    net.weights[i,i] = 0        # Feed the pattern and check the results
-        # Feeding the pattern using asynchronous update
         neuronState = net.feedAsync(inputPattern[:,0],n_i)
         if(neuronState != inputPattern[n_i,0]):
             errors += 1
