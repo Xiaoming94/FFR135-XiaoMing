@@ -25,8 +25,8 @@ for p in patterns :
         p_i = np.random.randint(p)
         inputPattern = net.patterns[p_i]
         
-        neuronState = net.feedAsync(inputPattern[:,0],n_i)
-        if(neuronState != inputPattern[n_i,0]):
+        neuronState = net.feedAsync(inputPattern,n_i)
+        if(neuronState != inputPattern[n_i]):
             errors += 1
     
     p_error = errors/trials

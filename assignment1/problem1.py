@@ -35,8 +35,8 @@ for p in patterns :
         
         # Feed the pattern and check the results
         # Feeding the pattern using asynchronous update
-        neuronState = net.feedAsync(inputPattern[:,0],n_i)
-        if(neuronState != inputPattern[n_i,0]):
+        neuronState = net.feedAsync(inputPattern,n_i)
+        if(neuronState != inputPattern[n_i]):
             errors += 1
     
     p_error = errors/trials

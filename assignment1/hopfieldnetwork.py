@@ -10,41 +10,34 @@ import random
 ###############################################
 
 def genRandPatterns(patterns,bitts):
-    pat = []
+    pat = np.random.randint(2,size=(patterns,bitts)) * 2 - 1
+    return pat
+
+def calcWeights(patterns):
+    (_,bitts) = patterns.shape 
     w = np.zeros((bitts,bitts))
-    for n in range(patterns):
-        p = np.random.randint(2,size=(bitts,1)) * 2 - 1
-        pat.append(p)
+    for p in patterns :
+        vecP = p.reshape(bitts,1)
+        w = w + vecP @ np.transpose(vecP)
 
-        # Calculating weights Using Hebb's Rule
-        w = w + np.multiply((1/bitts),np.multiply(p,p.transpose()))
-    
-    return (pat,w)
 
-def calcWeights(data):
-    bitts = data[0].size
-    w = np.zeros((bitts,bitts))
-    for p in data :
-        w = w + np.multiply((1/bitts),np.multiply(p,p.transpose()))
+    return 1/bitts * w
 
-    return w
 
-    
 class HopField(object):
     def __init__(self,data=None,patterns=10,bitts=5):
         # Generating Patterns
         if data == None :
-            (pat, w) = genRandPatterns(patterns,bitts)
-        
+            pat = genRandPatterns(patterns,bitts)
+
         else :
             pat = data
-            w = calcWeights(data)
 
         # Storing The Patterns
         self.patterns = pat
 
         # Storing the weights
-        self.weights = w
+        self.weights = calcWeights(pat)
 
     # Asynchronus feed Update
     def feedAsync(self,input,neuronIndex):
