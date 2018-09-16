@@ -25,9 +25,9 @@ def calcWeights(patterns):
 
 
 class HopField(object):
-    def __init__(self,data=None,patterns=10,bitts=5):
+    def __init__(self,usedata=False,data=None,patterns=10,bitts=5):
         # Generating Patterns
-        if data == None :
+        if not usedata :
             pat = genRandPatterns(patterns,bitts)
 
         else :
