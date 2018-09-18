@@ -11,7 +11,7 @@ def feedUpdateConverge(net,input):
     while not converged:
         oldStates = states.copy()
         for i in range(bitts):
-            states[i] = net.feedAsync(oldStates,i)
+            states[i] = net.feedAsync(states,i)
         
         diff = np.sum(states - oldStates)
         converged = diff == 0
