@@ -38,7 +38,7 @@ for p in patterns:
         randIndices = np.random.randint(200,size=bigT)
         
         # Picking the first pattern
-        x1 = net.patterns[1]
+        x1 = net.patterns[0]
         states = x1.copy()
 
         # Calculating the order parameters
