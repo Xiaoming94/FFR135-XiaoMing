@@ -11,14 +11,14 @@ class StochasticHopfield(HopField):
     
     # Definition of gFunction according to lecture slides
     def gFunction(self,b):
-        nat_e = np.exp(-2 * self.beta * z)
+        nat_e = np.exp(-2 * self.beta * b)
         return 1/(1 + nat_e)
 
     # Asynchronous feed using Stochastic dynamics
     def feedAsync(self,input,neuronIndex):
         neuronWeights = self.weights[neuronIndex,:]
         b = neuronWeights @ input
-        g = gFunction(b)
+        g = self.gFunction(b)
         r = random.random()
         return 1 if r < g else -1
     
