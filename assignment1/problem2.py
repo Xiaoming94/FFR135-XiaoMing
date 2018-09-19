@@ -1,9 +1,19 @@
+# problem2.py
 # Author: Henry Yang
 
 import numpy as np
 from hopfieldnetwork import HopField
 import random as r
 
+############################################
+# Script file for all of problem 2         #
+# As according to the problem description  #
+# Given on OpenTA                          #
+############################################
+
+###
+# Function for updating the update pattern
+# Implemented using the "Typewriter" schema described in the problem description
 def feedUpdateConverge(net,input):
     states = input
     converged = False
@@ -18,6 +28,11 @@ def feedUpdateConverge(net,input):
     
     return states
 
+###
+# Function for finding a matching stored pattern 
+# for a particular bit pattern
+# returns 6 if pattern doesn't match any stored once
+
 def findMatched(states,inputs):
     i = 1
     for p in inputs :
@@ -28,6 +43,9 @@ def findMatched(states,inputs):
         i += 1
     return i 
         
+# Following arrays (vectors) are the training data
+# Binary with 1 and -1
+# Pattern takes the form of 0,1,2,3, & 4
 
 x1=np.array([-1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
              -1, -1, -1, 1, 1, 1, 1, -1, -1, -1,
@@ -121,6 +139,9 @@ x5=np.array([
 
 data = np.stack((x1,x2,x3,x4,x5))
 
+# Given input patterns
+# These are later fed to the network
+
 input1 = np.array([
     1, 1, 1, 1, 1, 1, 1, 1, -1, -1, 
     1, 1, 1, 1, 1, 1, 1, 1, -1, -1, 
@@ -162,7 +183,17 @@ input3 = np.array([
 
 inputs = [input1,input2,input3]
 
+# Constructing the network
+
 net = HopField(True,data)
+
+# Setting diagonal to 0
+
+for i in range(x1.size):
+    net.weights[i,i] = 0
+
+# Performing the experiments
+
 for i in inputs :
     print(i.reshape(16,10))
     res = feedUpdateConverge(net,i)

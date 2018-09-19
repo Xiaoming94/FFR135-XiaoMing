@@ -1,10 +1,19 @@
+# stochastichopfield.py
 # Author: Henry Yang
 
 import numpy as np
 import random
 from hopfieldnetwork import HopField
 
+#######################################################
+# Class declaration for the Stochastic Hopfield Model #
+# As based on the lecture note.                       #
+# Implemented as a subclass of HopField               #
+#######################################################
+
 class StochasticHopfield(HopField):
+
+    # Overriding the constructor to add a beta variable
     def __init__(self,usedata=False,data=None,patterns=10,bitts=5,beta=1):
         super(StochasticHopfield, self).__init__(usedata,data,patterns,bitts)
         self.beta = beta
