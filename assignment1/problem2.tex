@@ -1,0 +1,279 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=1in]{geometry}
+
+\title{Code used in HW1 problem2}
+\begin{document}
+
+\maketitle
+
+\begin{verbatim}
+# hopfieldnetwork.py
+# author: Henry Yang (940503-1056)
+
+import numpy as np
+import random
+
+###############################################
+# Class for the Hopfield Model Neural Network #
+# Using McCulloch Pitts Neurons               #
+###############################################
+
+def genRandPatterns(patterns,bitts):
+    pat = np.random.randint(2,size=(patterns,bitts)) * 2 - 1
+    return pat
+
+def calcWeights(patterns):
+    (_,bitts) = patterns.shape 
+    w = np.zeros((bitts,bitts))
+    for p in patterns :
+        vecP = p.reshape(bitts,1)
+        w = w + vecP @ np.transpose(vecP)
+
+
+    return 1/bitts * w
+
+
+class HopField(object):
+    def __init__(self,usedata=False,data=None,patterns=10,bitts=5):
+        # Generating Patterns
+        if not usedata :
+            pat = genRandPatterns(patterns,bitts)
+
+        else :
+            pat = data
+
+        # Storing The Patterns
+        self.patterns = pat
+
+        # Storing the weights
+        self.weights = calcWeights(pat)
+
+    # Asynchronus feed Update
+    def feedAsync(self,input,neuronIndex):
+        #(bitts,_) = self.weights.shape
+        #neuronIndex = np.random.randint(low=0,high=bitts)
+        neuronWeights = self.weights[neuronIndex,:]
+        z = neuronWeights @ input
+        neuronState = np.sign(z)
+        if neuronState == 0:
+            neuronState = 1
+        return neuronState
+    
+    # Synchronous feed.
+    # Implemented as a matrix multiplication
+    def feedSync(self,input):
+        z_vec = self.weights @ input
+        neuronStates = np.sign(z_vec)
+        neuronStates[np.where(neuronStates == 0)] = 1
+        return neuronStates
+
+
+# problem2.py
+# Author: Henry Yang
+
+import numpy as np
+from hopfieldnetwork import HopField
+import random as r
+
+############################################
+# Script file for all of problem 2         #
+# As according to the problem description  #
+# Given on OpenTA                          #
+############################################
+
+###
+# Function for updating the update pattern
+# Implemented using the "Typewriter" schema described in the problem description
+def feedUpdateConverge(net,input):
+    states = input
+    converged = False
+    bitts = input.size
+    while not converged:
+        oldStates = states.copy()
+        for i in range(bitts):
+            states[i] = net.feedAsync(states,i)
+        
+        diff = np.sum(states - oldStates)
+        converged = diff == 0
+    
+    return states
+
+###
+# Function for finding a matching stored pattern 
+# for a particular bit pattern
+# returns 6 if pattern doesn't match any stored once
+
+def findMatched(states,inputs):
+    i = 1
+    for p in inputs :
+        if np.sum(p - states) == 0:
+            return i
+        elif np.sum(p + states) == 0:
+            return -i
+        i += 1
+    return i 
+        
+# Following arrays (vectors) are the training data
+# Binary with 1 and -1
+# Pattern takes the form of 0,1,2,3, & 4
+
+x1=np.array([-1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+             -1, -1, -1, 1, 1, 1, 1, -1, -1, -1,
+             -1, -1, 1, 1, 1, 1, 1, 1, -1, -1,
+             -1, 1, 1, 1, -1, -1, 1, 1, 1, -1,
+             -1, 1, 1, 1, -1, -1, 1, 1, 1, -1,
+             -1, 1, 1, 1, -1, -1, 1, 1, 1, -1,
+             -1, 1, 1, 1, -1, -1, 1, 1, 1, -1,
+             -1, 1, 1, 1, -1, -1, 1, 1, 1, -1,
+             -1, 1, 1, 1, -1, -1, 1, 1, 1, -1,
+             -1, 1, 1, 1, -1, -1, 1, 1, 1, -1,
+             -1, 1, 1, 1, -1, -1, 1, 1, 1, -1,
+             -1, 1, 1, 1, -1, -1, 1, 1, 1, -1,
+             -1, 1, 1, 1, -1, -1, 1, 1, 1, -1,
+             -1, -1, 1, 1, 1, 1, 1, 1, -1, -1,
+             -1, -1, -1, 1, 1, 1, 1, -1, -1, -1,
+             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
+            ])
+x2=np.array([
+             -1, -1, -1, 1, 1, 1, 1, -1, -1, -1,
+             -1, -1, -1, 1, 1, 1, 1, -1, -1, -1,
+             -1, -1, -1, 1, 1, 1, 1, -1, -1, -1,
+             -1, -1, -1, 1, 1, 1, 1, -1, -1, -1,
+             -1, -1, -1, 1, 1, 1, 1, -1, -1, -1,
+             -1, -1, -1, 1, 1, 1, 1, -1, -1, -1,
+             -1, -1, -1, 1, 1, 1, 1, -1, -1, -1,
+             -1, -1, -1, 1, 1, 1, 1, -1, -1, -1,
+             -1, -1, -1, 1, 1, 1, 1, -1, -1, -1,
+             -1, -1, -1, 1, 1, 1, 1, -1, -1, -1,
+             -1, -1, -1, 1, 1, 1, 1, -1, -1, -1,
+             -1, -1, -1, 1, 1, 1, 1, -1, -1, -1,
+             -1, -1, -1, 1, 1, 1, 1, -1, -1, -1,
+             -1, -1, -1, 1, 1, 1, 1, -1, -1, -1,
+             -1, -1, -1, 1, 1, 1, 1, -1, -1, -1,
+             -1, -1, -1, 1, 1, 1, 1, -1, -1, -1 ])
+
+x3=np.array([
+     1, 1, 1, 1, 1, 1, 1, 1, -1, -1,
+     1, 1, 1, 1, 1, 1, 1, 1, -1, -1,
+     -1, -1, -1, -1, -1, 1, 1, 1, -1, -1,
+     -1, -1, -1, -1, -1, 1, 1, 1, -1, -1,
+     -1, -1, -1, -1, -1, 1, 1, 1, -1, -1,
+     -1, -1, -1, -1, -1, 1, 1, 1, -1, -1,
+     -1, -1, -1, -1, -1, 1, 1, 1, -1, -1,
+     1, 1, 1, 1, 1, 1, 1, 1, -1, -1,
+     1, 1, 1, 1, 1, 1, 1, 1, -1, -1,
+     1, 1, 1, -1, -1, -1, -1, -1, -1, -1,
+     1, 1, 1, -1, -1, -1, -1, -1, -1, -1,
+     1, 1, 1, -1, -1, -1, -1, -1, -1, -1,
+     1, 1, 1, -1, -1, -1, -1, -1, -1, -1,
+     1, 1, 1, -1, -1, -1, -1, -1, -1, -1,
+     1, 1, 1, 1, 1, 1, 1, 1, -1, -1,
+     1, 1, 1, 1, 1, 1, 1, 1, -1, -1 ])
+
+x4=np.array([
+     -1, -1, 1, 1, 1, 1, 1, 1, -1, -1,
+     -1, -1, 1, 1, 1, 1, 1, 1, 1, -1,
+     -1, -1, -1, -1, -1, -1, 1, 1, 1, -1,
+     -1, -1, -1, -1, -1, -1, 1, 1, 1, -1,
+     -1, -1, -1, -1, -1, -1, 1, 1, 1, -1,
+     -1, -1, -1, -1, -1, -1, 1, 1, 1, -1,
+     -1, -1, -1, -1, -1, -1, 1, 1, 1, -1,
+     -1, -1, 1, 1, 1, 1, 1, 1, -1, -1,
+     -1, -1, 1, 1, 1, 1, 1, 1, -1, -1,
+     -1, -1, -1, -1, -1, -1, 1, 1, 1, -1,
+     -1, -1, -1, -1, -1, -1, 1, 1, 1, -1,
+     -1, -1, -1, -1, -1, -1, 1, 1, 1, -1,
+     -1, -1, -1, -1, -1, -1, 1, 1, 1, -1,
+     -1, -1, -1, -1, -1, -1, 1, 1, 1, -1,
+     -1, -1, 1, 1, 1, 1, 1, 1, 1, -1,
+     -1, -1, 1, 1, 1, 1, 1, 1, -1, -1
+    ])
+
+x5=np.array([
+     -1, 1, 1, -1, -1, -1, -1, 1, 1, -1,
+     -1, 1, 1, -1, -1, -1, -1, 1, 1, -1,
+     -1, 1, 1, -1, -1, -1, -1, 1, 1, -1,
+     -1, 1, 1, -1, -1, -1, -1, 1, 1, -1,
+     -1, 1, 1, -1, -1, -1, -1, 1, 1, -1,
+     -1, 1, 1, -1, -1, -1, -1, 1, 1, -1,
+     -1, 1, 1, -1, -1, -1, -1, 1, 1, -1,
+     -1, 1, 1, 1, 1, 1, 1, 1, 1, -1,
+     -1, 1, 1, 1, 1, 1, 1, 1, 1, -1,
+     -1, -1, -1, -1, -1, -1, -1, 1, 1, -1,
+     -1, -1, -1, -1, -1, -1, -1, 1, 1, -1,
+     -1, -1, -1, -1, -1, -1, -1, 1, 1, -1,
+     -1, -1, -1, -1, -1, -1, -1, 1, 1, -1,
+     -1, -1, -1, -1, -1, -1, -1, 1, 1, -1,
+     -1, -1, -1, -1, -1, -1, -1, 1, 1, -1,
+     -1, -1, -1, -1, -1, -1, -1, 1, 1, -1 ])
+
+data = np.stack((x1,x2,x3,x4,x5))
+
+# Given input patterns
+# These are later fed to the network
+
+input1 = np.array([
+    1, 1, 1, 1, 1, 1, 1, 1, -1, -1, 
+    1, 1, 1, 1, 1, 1, 1, 1, -1, -1, 
+    -1, -1, -1, -1, -1, 1, 1, 1, -1, -1, 
+    -1, -1, -1, -1, -1, 1, 1, 1, -1, -1, 
+    -1, -1, -1, -1, -1, 1, 1, 1, -1, -1, 
+    -1, -1, -1, -1, -1, 1, 1, 1, -1, -1, 
+    -1, -1, -1, -1, -1, 1, 1, 1, -1, -1, 
+    1, 1, 1, 1, 1, 1, 1, 1, -1, -1, 
+    1, 1, 1, 1, 1, 1, 1, 1, -1, -1, 
+    1, 1, 1, -1, -1, -1, -1, -1, -1, -1, 
+    1, 1, 1, -1, -1, -1, -1, -1, -1, -1, 
+    1, 1, 1, -1, -1, -1, -1, -1, -1, -1, 
+    1, 1, 1, -1, -1, -1, -1, -1, -1, -1, 
+    1, 1, 1, -1, -1, -1, -1, -1, -1, -1, 
+    1, 1, 1, 1, 1, 1, 1, 1, -1, -1, 
+    -1, -1, -1, -1, -1, -1, -1, -1, 1, 1]) 
+
+input2 = np.array([[1, 1, -1, -1, -1, -1, -1, -1, 1, 1], [1, 1, -1, -1, -1, -1, -1, -1, -1, 1], [1, 1, 1, 1, 1, 1, -1, -1, -1, 1], [1, 1, 1, 1, 1, 1, -1, -1, -1, 1], [1, 1, 1, 1, 1, 1, -1, -1, -1, 1], [1, 1, 1, 1, 1, 1, -1, -1, -1, 1], [1, 1, 1, 1, 1, 1, -1, -1, -1, 1], [1, 1, -1, -1, -1, -1, -1, -1, 1, 1], [1, 1, -1, -1, -1, 1, 1, 1, -1, -1], [-1, -1, -1, -1, -1, -1, 1, 1, 1, -1], [-1, -1, -1, -1, -1, -1, 1, 1, 1, -1], [-1, -1, -1, -1, -1, -1, 1, 1, 1, -1], [-1, -1, -1, -1, -1, -1, 1, 1, 1, -1], [-1, -1, -1, -1, -1, -1, 1, 1, 1, -1], [-1, -1, 1, 1, 1, 1, 1, 1, 1, -1], [-1, -1, 1, 1, 1, 1, 1, 1, -1, -1]] ).flatten()
+
+input3 = np.array([
+    1, -1, -1, 1, 1, 1, 1, -1, -1, 1,
+    1, -1, -1, 1, 1, 1, 1, -1, -1, 1,
+    -1, 1, 1, -1, -1, -1, -1, 1, 1, -1,
+    -1, 1, 1, -1, -1, -1, -1, 1, 1, -1,
+    -1, 1, 1, -1, -1, -1, -1, 1, 1, -1,
+    -1, 1, 1, -1, -1, -1, -1, 1, 1, -1,
+    -1, 1, 1, -1, -1, -1, -1, 1, 1, -1,
+    -1, 1, 1, 1, 1, 1, 1, 1, 1, -1,
+    -1, 1, 1, 1, 1, 1, 1, 1, 1, -1,
+    -1, -1, -1, -1, -1, -1, -1, 1, 1, -1,
+    -1, -1, -1, -1, -1, -1, -1, 1, 1, -1,
+    -1, -1, -1, -1, -1, -1, -1, 1, 1, -1,
+    -1, -1, -1, -1, -1, -1, -1, 1, 1, -1,
+    -1, -1, -1, -1, -1, -1, -1, 1, 1, -1,
+    -1, -1, -1, -1, -1, -1, -1, 1, 1, -1,
+    -1, -1, -1, -1, -1, -1, -1, 1, 1, -1]
+)
+
+inputs = [input1,input2,input3]
+
+# Constructing the network
+
+net = HopField(True,data)
+
+# Setting diagonal to 0
+
+for i in range(x1.size):
+    net.weights[i,i] = 0
+
+# Performing the experiments
+
+for i in inputs :
+    print(i.reshape(16,10))
+    res = feedUpdateConverge(net,i)
+    print("current input converges to:")
+    print(res.reshape(16,10))
+    pat = findMatched(res,data)
+    print("Matching pattern : %s" % pat)
+
+    print()
+
+\end{verbatim}
+\end{document}

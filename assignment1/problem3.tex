@@ -1,0 +1,160 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=1in]{geometry}
+
+\title{Code used during probelm3 HW1}
+\begin{document}
+
+\maketitle
+\begin{verbatim}
+# hopfieldnetwork.py
+# author: Henry Yang (940503-1056)
+
+import numpy as np
+import random
+
+###############################################
+# Class for the Hopfield Model Neural Network #
+# Using McCulloch Pitts Neurons               #
+###############################################
+
+def genRandPatterns(patterns,bitts):
+    pat = np.random.randint(2,size=(patterns,bitts)) * 2 - 1
+    return pat
+
+def calcWeights(patterns):
+    (_,bitts) = patterns.shape 
+    w = np.zeros((bitts,bitts))
+    for p in patterns :
+        vecP = p.reshape(bitts,1)
+        w = w + vecP @ np.transpose(vecP)
+
+
+    return 1/bitts * w
+
+
+class HopField(object):
+    def __init__(self,usedata=False,data=None,patterns=10,bitts=5):
+        # Generating Patterns
+        if not usedata :
+            pat = genRandPatterns(patterns,bitts)
+
+        else :
+            pat = data
+
+        # Storing The Patterns
+        self.patterns = pat
+
+        # Storing the weights
+        self.weights = calcWeights(pat)
+
+    # Asynchronus feed Update
+    def feedAsync(self,input,neuronIndex):
+        #(bitts,_) = self.weights.shape
+        #neuronIndex = np.random.randint(low=0,high=bitts)
+        neuronWeights = self.weights[neuronIndex,:]
+        z = neuronWeights @ input
+        neuronState = np.sign(z)
+        if neuronState == 0:
+            neuronState = 1
+        return neuronState
+    
+    # Synchronous feed.
+    # Implemented as a matrix multiplication
+    def feedSync(self,input):
+        z_vec = self.weights @ input
+        neuronStates = np.sign(z_vec)
+        neuronStates[np.where(neuronStates == 0)] = 1
+        return neuronStates
+
+
+# stochastichopfield.py
+# Author: Henry Yang
+
+import numpy as np
+import random
+from hopfieldnetwork import HopField
+
+#######################################################
+# Class declaration for the Stochastic Hopfield Model #
+# As based on the lecture note.                       #
+# Implemented as a subclass of HopField               #
+#######################################################
+
+class StochasticHopfield(HopField):
+
+    # Overriding the constructor to add a beta variable
+    def __init__(self,usedata=False,data=None,patterns=10,bitts=5,beta=1):
+        super(StochasticHopfield, self).__init__(usedata,data,patterns,bitts)
+        self.beta = beta
+    
+    # Definition of gFunction according to lecture slides
+    def gFunction(self,b):
+        nat_e = np.exp(-2 * self.beta * b)
+        return 1/(1 + nat_e)
+
+    # Asynchronous feed using Stochastic dynamics
+    def feedAsync(self,input,neuronIndex):
+        neuronWeights = self.weights[neuronIndex,:]
+        b = neuronWeights @ input
+        g = self.gFunction(b)
+        r = random.random()
+        return 1 if r < g else -1
+    
+
+# problem3.py
+# Author: Henry Yang
+
+import numpy as np
+from stochastichopfield import StochasticHopfield
+
+########################################
+# Script file for problem 3            #
+# Using a stochastic Hopfield model    #
+# Calculating the orderparameter       #
+# With the two given set of parameters #
+########################################
+
+## Given parameters
+experiments = 100
+bigT = 10 ** 5
+bigN = 200
+beta = 2
+patterns = [5,40]
+
+# Performing the experiments
+# Calculates the average order parameter using cumulated sums
+# Than dividing with numbers of experiments
+
+for p in patterns:
+
+    # Declaraing the cumulative sum
+    orderParam = 0
+    for _ in range(experiments):
+        net = StochasticHopfield(patterns = p, bitts = bigN, beta = beta)
+        for i in range(bigN):
+            net.weights[i,i] = 0
+
+        # Inner orderparameters
+        m = 0
+
+        # Choosing the random neurons
+        randIndices = np.random.randint(200,size=bigT)
+        
+        # Picking the first pattern
+        x1 = net.patterns[0]
+        states = x1.copy()
+
+        # Calculating the order parameters
+        for i in randIndices :
+            new_si = net.feedAsync(states,i)
+            states[i] = new_si
+            m = m + (states @ x1)/bigN
+
+        orderParam += m/bigT
+
+    # Printing the results    
+    print("Order parameter for p = %s : %s" % (p,orderParam/experiments))
+
+\end{verbatim}
+\end{document}
