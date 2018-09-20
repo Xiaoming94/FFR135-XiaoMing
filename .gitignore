@@ -291,6 +291,8 @@ acs-*.bib
 # hyperref
 *.brf
 
+*.vslog
+*.pdf
 # knitr
 *-concordance.tex
 # TODO Comment the next line if you want to keep your tikz graphics files
@@ -418,5 +420,5 @@ TSWLatexianTemp*
 # glossaries
 *.glstex
 
-
+*.vscodeLog
 # End of https://www.gitignore.io/api/latex
