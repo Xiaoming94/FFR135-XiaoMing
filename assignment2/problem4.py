@@ -11,9 +11,7 @@ validation_set_path = os.path.join('.','validation_set.csv')
 training_set = np.genfromtxt(training_set_path,delimiter = ',')
 validation_set = np.genfromtxt(validation_set_path,delimiter = ',')
 
-train_data = training_set[:,0:2]
-train_targets = training_set[:,-1]
+net = TLPerceptron(size_m1,size_m2,0.01)
 
-val_data = validation_set[:,0:2]
-val_targets = validation_set[:,-1]
+net.train(training_set,validation_set)
 
