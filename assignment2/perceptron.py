@@ -42,6 +42,10 @@ class TLPerceptron :
         output = np.tanh(self.weight_i @ state_vi - self.threshold_o)
         return (output, states)
     
+    def just_feed(self,input):
+        output, _ = self.feed(input)
+        return output
+
     def train(self, training_set, validation_set, batch_size = 1):
         energy_arr = []
         c_errors = []
@@ -49,19 +53,26 @@ class TLPerceptron :
         num_data,_ = np.shape(training_set)
         #valdata_num,_ = np.shape(validation_set)
         iterations = 0
-        #while c_error > c_error_t:
-        mu_i = np.random.randint(num_data)
-        tdata_row = training_set[mu_i,:]
-        t_point = tdata_row[0:2]
-        t_label = tdata_row[-1]
-        output,states = self.feed(t_point)
-        energy = 1/2 * (t_label - output)**2
-        energy_arr.append(energy)
-        update_vals = self.backpropagation(t_point, output, t_label, states )
-        print(update_vals)
-        print(update_vals['dw_i'].shape)
-        print(update_vals['dw_ij'].shape)
-        print(update_vals['dw_jk'].shape)
+        while c_error > c_error_t:
+            if iterations % 1000 == 0:
+                energy = self.calc_energy(validation_set)
+                energy_arr.append(energy)
+                c_error = self.calc_cerror(validation_set)
+                print(c_error)
+                c_errors.append(c_error)
+            
+            mu_i = np.random.randint(num_data)
+            tdata_row = training_set[mu_i,:]
+            t_point = tdata_row[0:2]
+            t_label = tdata_row[-1]
+            output,states = self.feed(t_point)
+
+            update_vals = self.backpropagation(t_point, output, t_label, states )
+            self.update_network(update_vals)
+
+            iterations += 1
+            
+        return c_errors, energy_arr
 
     def backpropagation(self, input , output, target ,states):
         update_vals = {}
@@ -77,4 +88,29 @@ class TLPerceptron :
 
         return update_vals
 
+    # Gradient descent
+    def update_network(self, update_vals):
+        # Updating weights
 
+        self.weight_i = self.weight_i - self.learning_rate * update_vals['dw_i']
+        self.weight_ij = self.weight_ij - self.learning_rate * update_vals['dw_ij']
+        self.weight_jk = self.weight_jk - self.learning_rate * update_vals['dw_jk']
+
+        # Update Thresholds
+        self.threshold_o = self.threshold_o - self.learning_rate * update_vals['dto']
+        self.threshold_i = self.threshold_i - self.learning_rate * update_vals['dti']
+        self.threshold_j = self.threshold_j - self.learning_rate * update_vals['dtj']
+    
+    def calc_cerror(self, validation_set):
+        val_in = validation_set[:,0:2]
+        val_t = validation_set[:,-1]
+
+        output = np.array([self.just_feed(vi) for vi in val_in])
+        return 1/(2 * np.size(val_t)) * np.sum(np.abs(np.sign(output) - val_t))
+
+    def calc_energy(self, validation_set):
+        val_in = validation_set[:,0:2]
+        val_t = validation_set[:,-1]
+
+        output = np.array([self.just_feed(vi) for vi in val_in])
+        return 1/2 * np.sum((val_t - output) ** 2)
