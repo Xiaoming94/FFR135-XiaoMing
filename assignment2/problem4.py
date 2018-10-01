@@ -1,15 +1,19 @@
 import numpy as np
+import os
 from perceptron import TLPerceptron
 
-net = TLPerceptron(4,5)
+size_m1 = 8
+size_m2 = 4
 
-print(net.weight_jk)
-print(net.weight_ij)
-print(net.weight_i)
+training_set_path = os.path.join('.','training_set.csv')
+validation_set_path = os.path.join('.','validation_set.csv')
 
-input = np.random.randint(2,size=2) * 2 - 1
-output,states = net.feed(input)
+training_set = np.genfromtxt(training_set_path,delimiter = ',')
+validation_set = np.genfromtxt(validation_set_path,delimiter = ',')
 
-print("output of %s from the network is %s" % (input,output))
-print("neuron states:")
-print(states)
+train_data = training_set[:,0:2]
+train_targets = training_set[:,-1]
+
+val_data = validation_set[:,0:2]
+val_targets = validation_set[:,-1]
+
