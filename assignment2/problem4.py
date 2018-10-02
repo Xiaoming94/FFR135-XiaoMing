@@ -3,8 +3,8 @@ import os
 from perceptron import TLPerceptron
 import matplotlib.pyplot as plt
 
-size_m1 = 8
-size_m2 = 4
+size_m1 = 10
+size_m2 = 21
 
 training_set_path = os.path.join('.','training_set.csv')
 validation_set_path = os.path.join('.','validation_set.csv')
