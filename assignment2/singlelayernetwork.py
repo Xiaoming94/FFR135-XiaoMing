@@ -12,20 +12,23 @@ class LCNetwork:
         self.threshold = np.random.rand() * 2 - 1
     
     def feed(self,input):
-        return np.tanh((1/2) * self.weight @ input - self.threshold)
+        return np.tanh((1/2) * self.weights @ input - self.threshold)
     
     def train(self,data, targets, learning_rate):
         energy_arr = []
         indices = np.random.randint(2 ** self.inputs,size=iterations)
-        for i in iterations:
-            energy_arr.append(calc_energy(data,targets))
+        iteration = 0
+        for i in indices:
+            if iteration % 100 == 0:
+                print("energy after %s iterations: %s" % (iteration,self.calc_energy(data,targets)))
+            energy_arr.append(self.calc_energy(data,targets))
             sample = data[i]
             output = self.feed(sample)
             target = targets[i]
             dw_i, dt = self.backprop(sample,output,target,)
             self.weights -= learning_rate * dw_i
             self.threshold -= learning_rate * dt
-        
+            iteration += 1
         return energy_arr
 
     def backprop(self,input,output, target):
