@@ -47,7 +47,8 @@ class TLPerceptron :
         return output
 
     def train(self, training_set, validation_set, batch_size = 1):
-        energy_arr = []
+        val_energy_arr = []
+        train_energy_arr = []
         c_errors = []
         c_error = 1
         num_data,_ = np.shape(training_set)
@@ -55,8 +56,10 @@ class TLPerceptron :
         iterations = 0
         while c_error > c_error_t:
             if iterations % 1000 == 0:
-                energy = self.calc_energy(validation_set)
-                energy_arr.append(energy)
+                train_energy = self.calc_energy(training_set)
+                train_energy_arr.append(train_energy)
+                val_energy = self.calc_energy(validation_set)
+                val_energy_arr.append(val_energy)
                 c_error = self.calc_cerror(validation_set)
                 print(c_error)
                 c_errors.append(c_error)
@@ -72,7 +75,7 @@ class TLPerceptron :
 
             iterations += 1
             
-        return c_errors, energy_arr
+        return c_errors, train_energy_arr, val_energy_arr
 
     def backpropagation(self, input , output, target ,states):
         update_vals = {}
