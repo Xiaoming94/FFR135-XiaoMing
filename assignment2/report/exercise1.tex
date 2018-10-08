@@ -1,0 +1,27 @@
+\section{Exercise 1 3-Dimensional Boolean Functions}
+
+\subsection{How many 3-dimensional Boolean functions are there}
+
+\ans
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|c c|c|}
+        \hline
+        $v_1$ & $v_2$ & \cellcolor{gray!25}$f(v_1,v_2)$\\
+        \hline 
+        0 & 0 & 0 \\
+        0 & 1 & 1 \\
+        1 & 0 & 1 \\
+        1 & 1 & 0 \\
+        \hline
+    \end{tabular}
+    \caption{Truth table for xor}
+    \label{tab:xor}
+\end{table}    
+
+Every boolean function can be described using a truth table, which maps a unique combination of 1s and 0s (or true or false) to a boolean output. An example is the one in table \ref{tab:xor}.
+
+In the case of 3-dimensional boolean functions that takes $v_1,v_2,\text{ and }v_3$ as input will thus get $2^3 = 8$ unique inputs. Since one unique input combination of true and false (1s and 0s) can be mapped to either true or false, the boolean function can thus be described as a 8 dimensional boolean vector. From this reasoning, it is trivial to see that there are $2^8 = 256$ Possible 3-dimensional boolean functions.
+
+\subsection{Count the number of symmetries of 3-dimensional Boolean functions that map 4 of the possible input patterns to 1.}
