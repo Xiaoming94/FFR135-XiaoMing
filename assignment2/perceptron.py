@@ -61,7 +61,7 @@ class TLPerceptron :
                 val_energy = self.calc_energy(validation_set)
                 val_energy_arr.append(val_energy)
                 c_error = self.calc_cerror(validation_set)
-                print(c_error)
+                print("on iteration %s, energy: %s, c_error: %s " % (iterations,val_energy,c_error))
                 c_errors.append(c_error)
             
             mu_i = np.random.randint(num_data)
