@@ -1,0 +1,224 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage[table]{xcolor}
+\usepackage{graphicx}
+
+
+\author{Henry Yang (9405031056)}
+\title{FFR135 - Artificial Neural Networks \\ \large Homework 2}
+\date{October 2018}
+
+\newcommand{\ans}{\textbf{Answer:}\newline}
+
+\begin{document}
+
+\maketitle
+    
+\begin{verbatim}
+
+# perceptron.py
+# Author: Henry Yang (940503-1056)
+
+import numpy as np
+
+c_error_t = 0.12
+###############################################################
+# Classfile for two layer perceptron.                         #
+# Implements Stochastic gradient descent with Backpropagation #
+# Slightliy different from lecture slides                     # 
+# All instances of this network got two inputs and one output #
+############################################################### 
+
+class TLPerceptron :
+    def __init__(self,size_m1,size_m2,learning_rate):
+        # Initialising Weight matrix input -> Hidden1
+        self.weight_jk = np.random.rand(size_m1,2) * 2 - 1
+
+        # Initialising Weight Matrix Hidden1 -> Hidden2
+        self.weight_ij = np.random.rand(size_m2,size_m1) * 2 - 1
+
+        # Initialising Weight Matrix Hidden2 -> output
+        self.weight_i = np.random.rand(size_m2) * 2 - 1
+
+        # Initialising Threshold1
+        self.threshold_j = np.random.rand(size_m1) * 2 - 1
+        
+        # initialising Threshold2
+        self.threshold_i = np.random.rand(size_m2) * 2 - 1
+
+        # initialising Output Threshold
+        self.threshold_o = np.random.rand() * 2 - 1
+
+        self.learning_rate = learning_rate
+
+    def feed(self,input):
+        states = {}
+        state_vj = np.tanh(self.weight_jk @ input - self.threshold_j)
+        states['vj'] = state_vj
+        state_vi = np.tanh(self.weight_ij @ state_vj - self.threshold_i)
+        states['vi'] = state_vi
+        output = np.tanh(self.weight_i @ state_vi - self.threshold_o)
+        return (output, states)
+    
+    def just_feed(self,input):
+        output, _ = self.feed(input)
+        return output
+
+    def train(self, training_set, validation_set, batch_size = 1):
+        val_energy_arr = []
+        train_energy_arr = []
+        c_errors = []
+        c_error = 1
+        num_data,_ = np.shape(training_set)
+        #valdata_num,_ = np.shape(validation_set)
+        iterations = 0
+        while c_error > c_error_t:
+            if iterations % 1000 == 0:
+                train_energy = self.calc_energy(training_set)
+                train_energy_arr.append(train_energy)
+                val_energy = self.calc_energy(validation_set)
+                val_energy_arr.append(val_energy)
+                c_error = self.calc_cerror(validation_set)
+                print("on iteration %s, energy: %s, c_error: %s " % (iterations,val_energy,c_error))
+                c_errors.append(c_error)
+            
+            mu_i = np.random.randint(num_data)
+            tdata_row = training_set[mu_i,:]
+            t_point = tdata_row[0:2]
+            t_label = tdata_row[-1]
+            output,states = self.feed(t_point)
+
+            update_vals = self.backpropagation(t_point, output, t_label, states )
+            self.update_network(update_vals)
+
+            iterations += 1
+            
+        return c_errors, train_energy_arr, val_energy_arr
+
+    def backpropagation(self, input , output, target ,states):
+        update_vals = {}
+        delta = -1 * ( target - output ) * (1 - output ** 2)
+        update_vals['dw_i'] = delta * states['vi']
+        update_vals['dto'] = delta * (-1)
+        delta = delta * self.weight_i * (1 - (states['vi'] ** 2))
+        update_vals['dw_ij'] = delta.reshape(np.size(states['vi']),1) @ states['vj'].reshape(1,np.size(states['vj']))
+        update_vals['dti'] = delta * (-1)
+        delta = (np.transpose(self.weight_ij) @ delta) * (1 - states['vj'] ** 2)
+        update_vals['dw_jk'] = delta.reshape(np.size(states['vj']),1) @ input.reshape(1,2)
+        update_vals['dtj'] = delta * (-1)
+
+        return update_vals
+
+    # Gradient descent
+    def update_network(self, update_vals):
+        # Updating weights
+
+        self.weight_i = self.weight_i - self.learning_rate * update_vals['dw_i']
+        self.weight_ij = self.weight_ij - self.learning_rate * update_vals['dw_ij']
+        self.weight_jk = self.weight_jk - self.learning_rate * update_vals['dw_jk']
+
+        # Update Thresholds
+        self.threshold_o = self.threshold_o - self.learning_rate * update_vals['dto']
+        self.threshold_i = self.threshold_i - self.learning_rate * update_vals['dti']
+        self.threshold_j = self.threshold_j - self.learning_rate * update_vals['dtj']
+    
+    def calc_cerror(self, validation_set):
+        val_in = validation_set[:,0:2]
+        val_t = validation_set[:,-1]
+
+        output = np.array([self.just_feed(vi) for vi in val_in])
+        return 1/(2 * np.size(val_t)) * np.sum(np.abs(np.sign(output) - val_t))
+
+    def calc_energy(self, validation_set):
+        val_in = validation_set[:,0:2]
+        val_t = validation_set[:,-1]
+
+        output = np.array([self.just_feed(vi) for vi in val_in])
+        return 1/2 * np.sum((val_t - output) ** 2)
+
+# problem4.py
+# Author: Henry Yang (940503-1056)
+
+import numpy as np
+import os
+from perceptron import TLPerceptron
+import matplotlib.pyplot as plt
+
+size_m1 = 16
+size_m2 = 8
+
+training_set_path = os.path.join('.','training_set.csv')
+validation_set_path = os.path.join('.','validation_set.csv')
+
+training_set = np.genfromtxt(training_set_path,delimiter = ',')
+validation_set = np.genfromtxt(validation_set_path,delimiter = ',')
+
+training_points = training_set[:,0:2]
+validation_points = validation_set[:,0:2]
+
+training_targets = training_set[:,-1]
+validation_targets = validation_set[:,-1]
+
+train_true = training_points[np.where(training_targets == 1)]
+train_false = training_points[np.where(training_targets == -1)]
+
+val_true = validation_points[np.where(validation_targets == 1)]
+val_false = validation_points[np.where(validation_targets == -1)]
+
+#plt.figure()
+#pf = plt.scatter(train_false[:,0],train_false[:,1],c='r',marker='o')
+#pt = plt.scatter(train_true[:,0],train_true[:,1],c='b',marker='o')
+#plt.title("Training data distribution")
+#plt.legend([pf,pt],["negative","positive"])
+#plt.figure()
+#pf = plt.scatter(val_false[:,0],val_false[:,1],c='m',marker='o')
+#pt = plt.scatter(val_true[:,0],val_true[:,1],c='g', marker='o')
+#plt.title("validation data distribution")
+#plt.legend([pf,pt],["negative","positive"])
+#plt.show()
+
+net = TLPerceptron(size_m1,size_m2,0.01)
+
+c_errors, train_energy_arr, val_energy_arr = net.train(training_set,validation_set)
+
+print(net.weight_jk.shape)
+
+np.savetxt(os.path.join('.','w1.csv'),net.weight_jk,delimiter=',')
+np.savetxt(os.path.join('.','w2.csv'),net.weight_ij,delimiter=',')
+np.savetxt(os.path.join('.','w3.csv'),net.weight_i,delimiter=',')
+
+np.savetxt(os.path.join('.','t1.csv'),net.threshold_j,delimiter=',')
+np.savetxt(os.path.join('.','t2.csv'),net.threshold_i,delimiter=',')
+#np.savetxt(os.path.join('.','t3.csv'),np.array(net.threshold_o),delimiter=',')
+
+plt.figure()
+train_line, = plt.plot(np.arange(len(train_energy_arr)),train_energy_arr,'b-')
+val_line, = plt.plot(np.arange(len(val_energy_arr)),val_energy_arr,'g-')
+plt.legend([train_line, val_line],["Training Energy","Validation Energy"])
+plt.grid(b=True)
+plt.title("Energy overtime")
+
+measure_count = 40
+x = np.linspace(-1,1,measure_count);
+y = np.linspace(-1,1,measure_count);
+
+xv,yv = np.meshgrid(x,y)
+
+measure_points = np.transpose(np.array([xv.reshape(-1),yv.reshape(-1)])) 
+#print(measure_points)
+results = np.array([np.sign(net.just_feed(xp)) for xp in measure_points])
+pp = measure_points[np.where(results == 1)]
+np = measure_points[np.where(results == -1)]
+
+plt.figure()
+plt.scatter(val_false[:,0],val_false[:,1],c="m",marker='o')
+plt.scatter(val_true[:,0],val_true[:,1],c="g",marker='o')
+plt.scatter(np[:,0],np[:,1],c="black",marker='+',s=10)
+plt.scatter(pp[:,0],pp[:,1],c="cyan",marker='+',s=10)
+plt.show()
+
+print(net.threshold_o)
+
+\end{verbatim}
+\end{document}
