@@ -75,9 +75,10 @@ class Perceptron:
             pstates = np.sum(s,axis=0) * 1/batchsize
             pstates = pstates.reshape(1,np.size(pstates))
             dw = delta.reshape(np.size(delta),1) @ pstates
+           
+            delta = np.transpose(l.weights) @ np.transpose(delta)
             l.weights -= learning_rate * dw
             l.thresholds -= learning_rate * delta.flatten() * (-1)
-            delta = np.transpose(l.weights) @ np.transpose(delta)
             delta = np.transpose(delta)
             current_states = pstates
 
