@@ -4,26 +4,8 @@
 import numpy as np
 from perceptron import Perceptron
 import os
-from mlxtend.data import loadlocal_mnist
 import matplotlib.pyplot as plt
-
-###
-# Function that loads the MNIST data-set
-###
-def load_data(path=os.path.join("."),type="train"):
-    filenames = {
-        'train' : ('train-images-idx3-ubyte','train-labels-idx1-ubyte'),
-        'val'   : ('t10k-images-idx3-ubyte','t10-labels-idx1-ubyte')
-    }
-
-    data_file, labels_file = filenames[type]
-
-    data, labels = loadlocal_mnist(
-        images_path=os.path.join(path,data_file),
-        labels_path=os.path.join(path,labels_file)
-    )
-
-    return data,labels
+import dataloader
 
 ##
 # Verification function
@@ -36,29 +18,9 @@ def print_network(net):
         print(l.weights.shape)
         print(l.thresholds)
 
-output_config = {
-    'count' : 1,
-    'activation': np.tanh
-}
-
-hidden1_config = {
-    'count' : 10,
-    'activation': np.tanh
-}
-
-config = {
-    'input' : 2,
-    'output' : output_config,
-    'hidden' : [hidden1_config]
-}
-
 def gen_testdata(data_num):
     data_pos = np.random.normal(0,1,size=(data_num,2))
-    max_x = np.max(data_pos[:,0])
-    max_y = np.max(data_pos[:,1])
-
-    data_neg = np.random.rand(data_num,2) * 2 - 1
-    data_neg = data_neg * np.array([max_x,max_y])
+    data_neg = np.random.normal(0,3,size=(data_num,2))
 
     labelpos = np.ones(data_num)
     labelneg = -1 * np.ones(data_num)
@@ -68,20 +30,66 @@ def gen_testdata(data_num):
 
     return data, labels
 
+def pn_cerror(output,target):
+    num_of_patterns = target.shape[0]
+    return (1/(2 * num_of_patterns)) * np.sum(np.abs(target-np.sign(output)))
+
+def bin_cerror(output,target):
+    num_of_patterns = target.shape[0]
+    h_output = classify(output - 1/2)
+    return (1/num_of_patterns) * np.sum(np.abs(target)-h_output)
+
+def classify(output):
+    classified = np.sign(output)
+    classified[np.where(classified < 0)] = 0
+    return classified
+
+output_config = {
+    'count' : 1,
+    'activation' : np.tanh
+}
+
+h1_config = {
+    'count' : 128,
+    'activation' : np.tanh
+}
+
+h2_config = {
+    'count' : 32,
+    'activation' : np.tanh
+}
+
+config = {
+    'input' : 2,
+    'output' : output_config,
+    'hidden' : [h1_config,h2_config]
+}
 
 epochs = 40
 batchsize = 10
 
 train_data, train_labels = gen_testdata(5000)
+
 val_data, val_labels = gen_testdata(1000)
 
 train_labels = train_labels.reshape(np.size(train_labels),1)
+val_labels = val_labels.reshape(np.size(val_labels),1)
 
 net = Perceptron(config)
 
 print_network(net)
 
-val_energy = net.train(epochs, batchsize,0.01,train_data,train_labels,val_data,val_labels)
+val_energy, val_cerror, best_net = net.train(epochs, batchsize,0.01,train_data,train_labels,val_data,val_labels,pn_cerror)
 
 plt.plot(np.arange(epochs),val_energy)
+plt.figure()
+
+plt.plot(np.arange(epochs),val_cerror)
+
+tout,_ = best_net.feed_forward(train_data)
+vout,_ = best_net.feed_forward(val_data)
+
+print("Accuracy on training data: %s " % (1-pn_cerror(tout,train_labels)))
+print("Accuracy on validation data: %s " % (1-pn_cerror(vout,val_labels)))
+
 plt.show()

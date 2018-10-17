@@ -2,6 +2,7 @@
 # Author: Henry Yang
 
 import numpy as np
+from copy import deepcopy
 
 ############################################
 # Base class for a multilayer Perceptron   #
@@ -47,10 +48,14 @@ class Perceptron:
 
     def train(self, epochs, batchsize, 
         learning_rate, train_data, train_targets,
-        val_data, val_targets):
+        val_data, val_targets, fcerror):
         data_count = train_data.shape[0]
         indices = np.arange(data_count)
         val_energy_vec = np.zeros(epochs)
+        val_cerror = np.zeros(epochs)
+        best_epoch = 0
+        best_cerror = 1
+        best_network = deepcopy(self)
         for i in range(epochs):
             batches = np.reshape(np.random.permutation(indices),(-1,batchsize))
             for batch in batches:
@@ -58,10 +63,15 @@ class Perceptron:
             
             output, _ = self.feed_forward(val_data)
             val_energy = energy_function(output,val_targets)
+            vcerror = fcerror(output,val_targets)
+            val_cerror[i] = vcerror
             print("current validation energy: %s" % val_energy)
             val_energy_vec[i] = val_energy
+            if vcerror < val_cerror[best_epoch]:
+                best_network = deepcopy(self)
+                best_epoch = i
 
-        return val_energy_vec
+        return val_energy_vec, val_cerror, best_network
     
     def backprop_update(self, learning_rate, data, targets, batchsize):
 
@@ -75,10 +85,10 @@ class Perceptron:
             pstates = np.sum(s,axis=0) * 1/batchsize
             pstates = pstates.reshape(1,np.size(pstates))
             dw = delta.reshape(np.size(delta),1) @ pstates
-           
+            l.thresholds -= learning_rate * delta.flatten() * (-1)
             delta = np.transpose(l.weights) @ np.transpose(delta)
             l.weights -= learning_rate * dw
-            l.thresholds -= learning_rate * delta.flatten() * (-1)
+           
             delta = np.transpose(delta)
             current_states = pstates
 
